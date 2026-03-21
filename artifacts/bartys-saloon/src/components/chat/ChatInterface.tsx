@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, RefreshCw } from 'lucide-react';
 import { useBartyChat } from '@/hooks/use-barty-chat';
 import { useListGeminiMessages } from '@workspace/api-client-react';
 import { MessageBubble } from './MessageBubble';
+import { useAppStore } from '@/store/use-app-store';
 
 export function ChatInterface({ conversationId }: { conversationId: number }) {
   const [input, setInput] = useState('');
@@ -26,6 +27,8 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
     }
   }, [messages, streamedText, optimisticUserMessage]);
 
+  const startNewChat = useAppStore(state => state.startNewChat);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isStreaming) return;
@@ -39,11 +42,22 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
       {/* Top Bar */}
       <div className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-sm flex items-center justify-between px-6 z-10">
         <h3 className="font-display text-lg text-amber-100/80">Conversation</h3>
-        {isUpdatingRemedy && (
-          <span className="text-xs font-serif text-amber-600/60 italic animate-pulse">
-            Barty's stirring your remedy…
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {isUpdatingRemedy && (
+            <span className="text-xs font-serif text-amber-600/60 italic animate-pulse">
+              Barty's stirring your remedy…
+            </span>
+          )}
+          <button
+            onClick={startNewChat}
+            disabled={isStreaming}
+            title="Start a new visit"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-display tracking-wider text-muted-foreground border border-border/50 hover:text-amber-200 hover:border-primary/40 hover:bg-primary/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            New Visit
+          </button>
+        </div>
       </div>
 
       {/* Messages Area */}

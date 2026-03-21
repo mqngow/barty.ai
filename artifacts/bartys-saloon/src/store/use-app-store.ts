@@ -20,6 +20,7 @@ interface AppState {
   setCurrentRemedy: (remedy: RemedyData | null) => void;
   isUpdatingRemedy: boolean;
   setIsUpdatingRemedy: (v: boolean) => void;
+  startNewChat: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -35,6 +36,12 @@ export const useAppStore = create<AppState>()(
       setCurrentRemedy: (remedy) => set({ currentRemedy: remedy }),
       isUpdatingRemedy: false,
       setIsUpdatingRemedy: (v) => set({ isUpdatingRemedy: v }),
+      startNewChat: () => set({
+        activeConversationId: null,
+        currentSessionId: null,
+        currentRemedy: null,
+        isUpdatingRemedy: false,
+      }),
     }),
     {
       name: 'bartys-saloon-storage',
