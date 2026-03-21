@@ -1,25 +1,32 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, RefreshCw } from 'lucide-react';
-import { useBartyChat } from '@/hooks/use-barty-chat';
 import { useListGeminiMessages } from '@workspace/api-client-react';
 import { MessageBubble } from './MessageBubble';
 import { useAppStore } from '@/store/use-app-store';
 
-export function ChatInterface({ conversationId }: { conversationId: number }) {
+interface ChatInterfaceProps {
+  conversationId: number;
+  sendMessage: (text: string) => Promise<void>;
+  isStreaming: boolean;
+  streamedText: string;
+  optimisticUserMessage: string;
+  isUpdatingRemedy: boolean;
+}
+
+export function ChatInterface({ 
+  conversationId, 
+  sendMessage, 
+  isStreaming, 
+  streamedText, 
+  optimisticUserMessage,
+  isUpdatingRemedy,
+}: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: messages = [] } = useListGeminiMessages(conversationId, {
     query: { refetchInterval: 5000 }
   });
-  
-  const { 
-    sendMessage, 
-    isStreaming, 
-    streamedText, 
-    optimisticUserMessage,
-    isUpdatingRemedy,
-  } = useBartyChat(conversationId);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -39,7 +46,6 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
   return (
     <div className="flex flex-col h-[600px] lg:h-[700px] bg-background/50 border border-border/50 rounded-2xl overflow-hidden shadow-2xl relative">
       
-      {/* Top Bar */}
       <div className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-sm flex items-center justify-between px-6 z-10">
         <h3 className="font-display text-lg text-amber-100/80">Conversation</h3>
         <div className="flex items-center gap-3">
@@ -60,7 +66,6 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
         </div>
       </div>
 
-      {/* Messages Area */}
       <div 
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-6 scroll-smooth"
@@ -88,7 +93,6 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
         )}
       </div>
 
-      {/* Input Area */}
       <div className="p-4 bg-card/90 border-t border-border/50 backdrop-blur-md">
         <form onSubmit={handleSubmit} className="relative flex items-end gap-2">
           <textarea

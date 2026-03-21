@@ -8,6 +8,7 @@ export function useBartyChat(conversationId: number | null) {
   const [streamedText, setStreamedText] = useState('');
   const [optimisticUserMessage, setOptimisticUserMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { mutateAsync: generateSpeech } = useTextToSpeech();
@@ -28,7 +29,6 @@ export function useBartyChat(conversationId: number | null) {
   }, []);
 
   const playBartyVoice = async (text: string) => {
-    if (!audioEnabled) return;
     try {
       const response = await generateSpeech({ data: { text } });
       if (response.audioBase64) {
@@ -37,10 +37,17 @@ export function useBartyChat(conversationId: number | null) {
         }
         const audio = new Audio(`data:${response.mimeType};base64,${response.audioBase64}`);
         audioRef.current = audio;
+        audio.addEventListener('playing', () => setIsSpeaking(true));
+        audio.addEventListener('ended', () => setIsSpeaking(false));
+        audio.addEventListener('pause', () => setIsSpeaking(false));
+        audio.addEventListener('error', () => setIsSpeaking(false));
         await audio.play();
+      } else {
+        setIsSpeaking(false);
       }
     } catch (err) {
       console.error("Failed to play Barty's voice:", err);
+      setIsSpeaking(false);
     }
   };
 
@@ -88,6 +95,7 @@ export function useBartyChat(conversationId: number | null) {
     if (!conversationId) return;
     
     setIsStreaming(true);
+    setIsSpeaking(true);
     setStreamedText('');
     setOptimisticUserMessage(text);
     setError(null);
@@ -136,13 +144,19 @@ export function useBartyChat(conversationId: number | null) {
       });
       
       if (fullResponse) {
-        // Play audio and update remedy concurrently (fire-and-forget remedy)
-        playBartyVoice(fullResponse);
         updateRemedy(conversationId);
+        if (audioEnabled) {
+          playBartyVoice(fullResponse);
+        } else {
+          setIsSpeaking(false);
+        }
+      } else {
+        setIsSpeaking(false);
       }
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong at the bar');
+      setIsSpeaking(false);
     } finally {
       setIsStreaming(false);
       setOptimisticUserMessage('');
@@ -154,6 +168,7 @@ export function useBartyChat(conversationId: number | null) {
     if (audioRef.current) {
       audioRef.current.pause();
     }
+    setIsSpeaking(false);
   };
 
   return {
@@ -164,5 +179,6 @@ export function useBartyChat(conversationId: number | null) {
     error,
     stopAudio,
     isUpdatingRemedy,
+    isSpeaking,
   };
 }
