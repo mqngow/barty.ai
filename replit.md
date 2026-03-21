@@ -1,10 +1,10 @@
-# Workspace
+# Barty's Saloon
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+A Wild West therapeutic bartender web app for HooHacks 2026. Users chat with Barty, a rugged-but-caring cowboy bartender who gives therapeutic advice. At the end of each conversation, Barty creates a unique custom cocktail recipe inspired by the topics discussed.
 
-## Stack
+## Tech Stack
 
 - **Monorepo tool**: pnpm workspaces
 - **Node.js version**: 24
@@ -12,85 +12,86 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
 - **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
+- **AI**: Gemini 2.5 Flash (via Replit AI Integrations — no personal API key needed)
+- **TTS**: ElevenLabs (requires ELEVENLABS_API_KEY in env)
+- **Frontend**: React + Vite + TailwindCSS + Framer Motion + Zustand
 - **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- **Build**: esbuild
+- **Containerization**: Docker + Docker Compose
 
 ## Structure
 
-```text
-artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
-├── lib/                    # Shared libraries
-│   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
-│   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts (single workspace package)
-│   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
-├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
-├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
-├── tsconfig.json           # Root TS project references
-└── package.json            # Root package with hoisted devDeps
+```
+artifacts/
+├── api-server/         Express API server
+│   └── src/routes/
+│       ├── gemini/conversations.ts   Barty's AI chat (SSE streaming)
+│       ├── sessions.ts               Session & drink recipe management
+│       └── elevenlabs.ts             Text-to-speech via ElevenLabs
+└── bartys-saloon/      React frontend (Wild West saloon UI)
+    └── src/
+        ├── pages/
+        │   ├── HomePage.tsx          Welcome + chat interface
+        │   └── DrinkMenuPage.tsx     Past sessions as drink log
+        ├── components/
+        │   ├── chat/                 Barty portrait, chat bubbles
+        │   └── menu/                 Drink cards, recipe modal
+        └── hooks/
+            └── use-barty-chat.ts     SSE streaming hook for Barty
+
+lib/
+├── api-spec/           OpenAPI spec + Orval codegen config
+├── api-client-react/   Generated React Query hooks
+├── api-zod/            Generated Zod validation schemas
+├── db/                 Drizzle ORM — conversations, messages, sessions tables
+└── integrations-gemini-ai/  Gemini AI client + batch utilities
 ```
 
-## TypeScript & Composite Projects
+## Features
 
-Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
+- **Chat with Barty**: AI-powered therapeutic bartender in Wild West style using Gemini 2.5 Flash with streaming
+- **Voice (optional)**: Barty's responses read aloud via ElevenLabs TTS (toggle in top nav)
+- **Drink Log**: Each conversation ends with a unique cocktail recipe — stored and browsable on the Drink Menu page
+- **Barty Art Placeholder**: Clear placeholder in `BartyPortrait.tsx` for dropping in your artist's artwork
+- **Docker support**: `Dockerfile` and `docker-compose.yml` for self-hosting
 
-- **Always typecheck from the root** — run `pnpm run typecheck` (which runs `tsc --build --emitDeclarationOnly`). This builds the full dependency graph so that cross-package imports resolve correctly. Running `tsc` inside a single package will fail if its dependencies haven't been built yet.
-- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck; actual JS bundling is handled by esbuild/tsx/vite...etc, not `tsc`.
-- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array. `tsc --build` uses this to determine build order and skip up-to-date packages.
+## Environment Variables
 
-## Root Scripts
+- `DATABASE_URL` — PostgreSQL connection string (auto-provided by Replit)
+- `AI_INTEGRATIONS_GEMINI_BASE_URL` — Gemini proxy URL (auto-provided by Replit AI Integrations)
+- `AI_INTEGRATIONS_GEMINI_API_KEY` — Gemini API key (auto-provided by Replit AI Integrations)
+- `ELEVENLABS_API_KEY` — ElevenLabs API key (optional, for voice)
+- `PORT` — Server port (auto-assigned by Replit)
 
-- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
-- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
+## Adding Barty's Art
 
-## Packages
+Open `artifacts/bartys-saloon/src/components/chat/BartyPortrait.tsx` and replace the placeholder `<div>` with your friend's artwork `<img>` tag.
 
-### `artifacts/api-server` (`@workspace/api-server`)
+## Key API Endpoints
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+- `POST /api/gemini/conversations` — Start a new chat session
+- `POST /api/gemini/conversations/:id/messages` — Send message, get SSE stream response
+- `POST /api/sessions` — Create/link a session to a conversation
+- `POST /api/sessions/:id/generate-drink` — Generate drink recipe from conversation
+- `GET /api/sessions` — List all sessions (drink log)
+- `POST /api/elevenlabs/tts` — Text-to-speech conversion
 
-- Entry: `src/index.ts` — reads `PORT`, starts Express
-- App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
-- Depends on: `@workspace/db`, `@workspace/api-zod`
-- `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
-- Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+## Deployment
 
-### `lib/db` (`@workspace/db`)
+### Self-hosting with Docker
 
-Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
+```bash
+cp .env.example .env
+# Edit .env with your values
+docker-compose up -d
+```
 
-- `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
-- `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
-- Exports: `.` (pool, db, schema), `./schema` (schema only)
+### Replit Deployment
 
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
+Click the "Publish" button in the Replit UI.
 
-### `lib/api-spec` (`@workspace/api-spec`)
+## HooHacks 2026 Themes
 
-Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`). Running codegen produces output into two sibling packages:
-
-1. `lib/api-client-react/src/generated/` — React Query hooks + fetch client
-2. `lib/api-zod/src/generated/` — Zod schemas
-
-Run codegen: `pnpm --filter @workspace/api-spec run codegen`
-
-### `lib/api-zod` (`@workspace/api-zod`)
-
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
-
-### `scripts` (`@workspace/scripts`)
-
-Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+- **Health & Wellness**: Therapeutic chat with Barty — emotional support, active listening, grounding
+- **Data Science & AI**: Gemini AI for personalized responses, conversation analysis, drink recipe generation
+- **Art & Gaming**: Interactive Wild West bartender character, animated UI, custom drink art

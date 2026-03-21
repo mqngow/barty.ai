@@ -1,0 +1,20 @@
+packages:
+  "framer-motion": "Animations and page transitions for premium feel"
+  "zustand": "Global state management for audio preferences and current session"
+  "date-fns": "Formatting dates for the drink menu"
+  "clsx": "Utility for conditionally joining class names"
+  "tailwind-merge": "Utility for merging tailwind classes safely"
+  "lucide-react": "Icons for UI elements"
+
+images:
+  - path: "artifacts/bartys-saloon/public/images/saloon-bg.png"
+    description: "Dark moody vintage wooden saloon wall background texture with warm amber ambient lighting and subtle smoke"
+    aspect_ratio: "16:9"
+  - path: "artifacts/bartys-saloon/public/images/vintage-paper.png"
+    description: "Worn vintage parchment paper texture with slight burnt edges and whiskey stains"
+    aspect_ratio: "1:1"
+
+notes:
+  - "Using ElevenLabs TTS for voice playback, needs base64 audio decoding"
+  - "Custom SSE hook built for native fetch to handle Gemini stream"
+  - "generateDrink assumes the {id} parameter refers to conversationId based on available API endpoints"

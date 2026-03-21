@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Rye&family=Playfair+Display:ital,wght@0,400..800;1,400..800&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-display: 'Rye', serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'DM Sans', sans-serif;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-border: hsl(var(--border));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-ring: hsl(var(--ring));
+
+  --animate-pulse-slow: pulse-slow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-sway: sway 6s ease-in-out infinite;
+  --animate-fade-in: fadeIn 0.5s ease-out forwards;
+  --animate-slide-up: slideUp 0.4s ease-out forwards;
+}
+
+:root {
+  /* Dark Saloon Theme */
+  --background: 30 20% 8%;
+  --foreground: 40 30% 90%;
+  
+  --primary: 35 85% 55%;
+  --primary-foreground: 30 30% 10%;
+  
+  --card: 30 20% 12%;
+  --card-foreground: 40 30% 90%;
+  
+  --border: 30 25% 20%;
+  
+  --muted: 30 15% 15%;
+  --muted-foreground: 40 20% 60%;
+  
+  --accent: 15 75% 50%;
+  --accent-foreground: 0 0% 100%;
+  
+  --ring: 35 85% 55%;
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.02); }
+}
+
+@keyframes sway {
+  0%, 100% { transform: rotate(-1deg); }
+  50% { transform: rotate(1deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-color: hsl(var(--background));
+    background-image: 
+      radial-gradient(circle at 50% 0%, hsla(35, 85%, 55%, 0.15) 0%, transparent 70%),
+      linear-gradient(to bottom, transparent, hsla(30, 20%, 5%, 0.8));
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-normal tracking-wide drop-shadow-md;
+  }
+}
+
+/* Custom Scrollbar for Saloon */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: hsla(var(--background), 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: hsla(var(--border), 0.8);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsla(var(--primary), 0.8);
+}
