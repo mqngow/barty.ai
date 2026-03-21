@@ -3,7 +3,7 @@ import { TextToSpeechBody } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-const DEFAULT_VOICE_ID = "TxGEqnHWrfWFTfGW9XjX";
+const DEFAULT_VOICE_ID = "pNInz6obpgDQGcFmaJgB";
 
 router.post("/elevenlabs/tts", async (req, res) => {
   const body = TextToSpeechBody.parse(req.body);
@@ -25,7 +25,7 @@ router.post("/elevenlabs/tts", async (req, res) => {
       },
       body: JSON.stringify({
         text: body.text,
-        model_id: "eleven_monolingual_v1",
+        model_id: "eleven_turbo_v2_5",
         voice_settings: {
           stability: 0.5,
           similarity_boost: 0.75,
