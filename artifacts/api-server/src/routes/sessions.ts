@@ -9,7 +9,7 @@ const router: IRouter = Router();
 
 router.post("/sessions", async (req, res) => {
   const body = req.body as { conversationId: number };
-  const conversation = await db.query.conversationsTable.findFirst({
+  const conversation = await db.query.conversations.findFirst({
     where: eq(conversationsTable.id, body.conversationId),
   });
   if (!conversation) {

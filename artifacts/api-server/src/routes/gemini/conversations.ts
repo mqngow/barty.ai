@@ -55,7 +55,7 @@ router.post("/conversations", async (req, res) => {
 
 router.get("/conversations/:id", async (req, res) => {
   const { id } = GetGeminiConversationParams.parse({ id: Number(req.params.id) });
-  const conversation = await db.query.conversationsTable.findFirst({
+  const conversation = await db.query.conversations.findFirst({
     where: eq(conversationsTable.id, id),
   });
   if (!conversation) {
@@ -72,7 +72,7 @@ router.get("/conversations/:id", async (req, res) => {
 
 router.delete("/conversations/:id", async (req, res) => {
   const { id } = DeleteGeminiConversationParams.parse({ id: Number(req.params.id) });
-  const conversation = await db.query.conversationsTable.findFirst({
+  const conversation = await db.query.conversations.findFirst({
     where: eq(conversationsTable.id, id),
   });
   if (!conversation) {
@@ -97,7 +97,7 @@ router.post("/conversations/:id/messages", async (req, res) => {
   const { id } = SendGeminiMessageParams.parse({ id: Number(req.params.id) });
   const body = SendGeminiMessageBody.parse(req.body);
 
-  const conversation = await db.query.conversationsTable.findFirst({
+  const conversation = await db.query.conversations.findFirst({
     where: eq(conversationsTable.id, id),
   });
   if (!conversation) {
