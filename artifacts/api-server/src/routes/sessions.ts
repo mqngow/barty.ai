@@ -92,6 +92,19 @@ router.get("/sessions/:id", async (req, res) => {
   res.json(session);
 });
 
+router.delete("/sessions/:id", async (req, res) => {
+  const { id } = GetSessionParams.parse({ id: Number(req.params.id) });
+
+  const [existing] = await db.select().from(sessionsTable).where(eq(sessionsTable.id, id));
+  if (!existing) {
+    res.status(404).json({ error: "Session not found" });
+    return;
+  }
+
+  await db.delete(sessionsTable).where(eq(sessionsTable.id, id));
+  res.status(204).end();
+});
+
 router.post("/sessions/:id/generate-drink", async (req, res) => {
   const { id } = GenerateDrinkParams.parse({ id: Number(req.params.id) });
 

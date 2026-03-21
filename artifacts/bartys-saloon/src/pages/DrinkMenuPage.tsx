@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DrinkCard } from '@/components/menu/DrinkCard';
 import { RecipeModal } from '@/components/menu/RecipeModal';
-import { useListSessions } from '@workspace/api-client-react';
+import { useListSessions, useDeleteSession, getListSessionsQueryKey } from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Session } from '@workspace/api-client-react';
 import { Leaf } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -10,8 +11,26 @@ import { motion } from 'framer-motion';
 export default function DrinkMenuPage() {
   const { data: sessions = [], isLoading } = useListSessions();
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
+  const { mutate: deleteSession } = useDeleteSession();
 
   const remedyLog = sessions.filter(s => s.drinkName);
+
+  function handleDelete(id: number) {
+    setDeletingId(id);
+    deleteSession({ id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
+        if (selectedSession?.id === id) {
+          setSelectedSession(null);
+        }
+      },
+      onSettled: () => {
+        setDeletingId(null);
+      },
+    });
+  }
 
   return (
     <AppLayout>
@@ -60,7 +79,9 @@ export default function DrinkMenuPage() {
                 key={session.id} 
                 session={session} 
                 index={i}
-                onClick={() => setSelectedSession(session)} 
+                onClick={() => setSelectedSession(session)}
+                onDelete={handleDelete}
+                isDeleting={deletingId === session.id}
               />
             ))}
           </div>
