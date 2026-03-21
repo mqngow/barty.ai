@@ -5,43 +5,25 @@ interface BartyPortraitProps {
   isSpeaking?: boolean;
 }
 
-const FRAME_INTERVAL_MS = 700;
-const FADE_OUT_MS = 250;
+const FADE_MS = 220;
 
 export function BartyPortrait({ isSpeaking = false }: BartyPortraitProps) {
   const [frameIndex, setFrameIndex] = useState(0);
   const [visible, setVisible] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const swapFrame = (nextIndex: number) => {
+  useEffect(() => {
     if (fadeRef.current) clearTimeout(fadeRef.current);
     setVisible(false);
     fadeRef.current = setTimeout(() => {
-      setFrameIndex(nextIndex);
+      setFrameIndex(isSpeaking ? 1 : 0);
       setVisible(true);
       fadeRef.current = null;
-    }, FADE_OUT_MS);
-  };
-
-  useEffect(() => {
-    if (isSpeaking) {
-      let tick = 0;
-      intervalRef.current = setInterval(() => {
-        tick = (tick + 1) % 2;
-        swapFrame(tick);
-      }, FRAME_INTERVAL_MS);
-    } else {
-      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      swapFrame(0);
-    }
-    return () => {
-      if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      if (fadeRef.current) { clearTimeout(fadeRef.current); fadeRef.current = null; }
-    };
+    }, FADE_MS);
+    return () => { if (fadeRef.current) clearTimeout(fadeRef.current); };
   }, [isSpeaking]);
 
-  const translateY = frameIndex === 0 ? '0%' : '-50%';
+  const translateY = frameIndex === 0 ? '0%' : `${-(100 / 3)}%`;
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -64,12 +46,12 @@ export function BartyPortrait({ isSpeaking = false }: BartyPortraitProps) {
               top: 0,
               left: 0,
               width: '100%',
-              height: '200%',
+              height: '300%',
               objectFit: 'cover',
               objectPosition: 'center top',
               transform: `translateY(${translateY})`,
               opacity: visible ? 1 : 0,
-              transition: `opacity ${FADE_OUT_MS}ms ease-in-out`,
+              transition: `opacity ${FADE_MS}ms ease-in-out`,
             }}
             draggable={false}
           />
