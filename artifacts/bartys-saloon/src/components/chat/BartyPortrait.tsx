@@ -1,63 +1,47 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
-type MouthFrame = 'idle' | 'talking-mid' | 'talking-open';
-
 interface BartyPortraitProps {
   isSpeaking?: boolean;
 }
 
-const MOUTH_FRAMES: MouthFrame[] = ['idle', 'talking-mid', 'talking-open', 'talking-mid'];
-const FRAME_INTERVAL_MS = 450;
-const CROSSFADE_DURATION_MS = 150;
-
-const FRAME_OFFSET: Record<MouthFrame, number> = {
-  'idle': 0,
-  'talking-mid': 1,
-  'talking-open': 2,
-};
+const FRAME_INTERVAL_MS = 700;
+const FADE_OUT_MS = 250;
 
 export function BartyPortrait({ isSpeaking = false }: BartyPortraitProps) {
-  const [currentFrame, setCurrentFrame] = useState<MouthFrame>('idle');
-  const [nextFrame, setNextFrame] = useState<MouthFrame>('idle');
-  const [crossfading, setCrossfading] = useState(false);
-  const frameIndexRef = useRef(0);
+  const [frameIndex, setFrameIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const fadeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fadeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scheduleFade = (toFrame: MouthFrame) => {
-    if (fadeTimeoutRef.current) { clearTimeout(fadeTimeoutRef.current); fadeTimeoutRef.current = null; }
-    setNextFrame(toFrame);
-    setCrossfading(true);
-    fadeTimeoutRef.current = setTimeout(() => {
-      setCurrentFrame(toFrame);
-      setCrossfading(false);
-      fadeTimeoutRef.current = null;
-    }, CROSSFADE_DURATION_MS);
+  const swapFrame = (nextIndex: number) => {
+    if (fadeRef.current) clearTimeout(fadeRef.current);
+    setVisible(false);
+    fadeRef.current = setTimeout(() => {
+      setFrameIndex(nextIndex);
+      setVisible(true);
+      fadeRef.current = null;
+    }, FADE_OUT_MS);
   };
 
   useEffect(() => {
     if (isSpeaking) {
+      let tick = 0;
       intervalRef.current = setInterval(() => {
-        frameIndexRef.current = (frameIndexRef.current + 1) % MOUTH_FRAMES.length;
-        scheduleFade(MOUTH_FRAMES[frameIndexRef.current]);
+        tick = (tick + 1) % 2;
+        swapFrame(tick);
       }, FRAME_INTERVAL_MS);
     } else {
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      frameIndexRef.current = 0;
-      scheduleFade('idle');
+      swapFrame(0);
     }
     return () => {
       if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
-      if (fadeTimeoutRef.current) { clearTimeout(fadeTimeoutRef.current); fadeTimeoutRef.current = null; }
+      if (fadeRef.current) { clearTimeout(fadeRef.current); fadeRef.current = null; }
     };
   }, [isSpeaking]);
 
-  const currentOffset = FRAME_OFFSET[currentFrame];
-  const nextOffset = FRAME_OFFSET[nextFrame];
-
-  const translateYCurrent = -(currentOffset * (100 / 3));
-  const translateYNext = -(nextOffset * (100 / 3));
+  const translateY = frameIndex === 0 ? '0%' : '-50%';
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -80,30 +64,12 @@ export function BartyPortrait({ isSpeaking = false }: BartyPortraitProps) {
               top: 0,
               left: 0,
               width: '100%',
-              height: '300%',
+              height: '200%',
               objectFit: 'cover',
               objectPosition: 'center top',
-              transform: `translateY(${translateYCurrent}%)`,
-              opacity: crossfading ? 0 : 1,
-              transition: `opacity ${CROSSFADE_DURATION_MS}ms ease-in-out`,
-            }}
-            draggable={false}
-          />
-          <img
-            src="/images/barty-portrait.png"
-            alt=""
-            aria-hidden="true"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '300%',
-              objectFit: 'cover',
-              objectPosition: 'center top',
-              transform: `translateY(${translateYNext}%)`,
-              opacity: crossfading ? 1 : 0,
-              transition: `opacity ${CROSSFADE_DURATION_MS}ms ease-in-out`,
+              transform: `translateY(${translateY})`,
+              opacity: visible ? 1 : 0,
+              transition: `opacity ${FADE_OUT_MS}ms ease-in-out`,
             }}
             draggable={false}
           />
