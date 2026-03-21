@@ -2,9 +2,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Leaf } from 'lucide-react';
 import { useAppStore } from '@/store/use-app-store';
 
-export function RemedyPanel() {
+interface RemedyPanelProps {
+  isUpdating: boolean;
+}
+
+export function RemedyPanel({ isUpdating }: RemedyPanelProps) {
   const remedy = useAppStore(state => state.currentRemedy);
-  const isUpdating = useAppStore(state => state.isUpdatingRemedy);
 
   return (
     <AnimatePresence mode="wait">
@@ -17,6 +20,7 @@ export function RemedyPanel() {
           transition={{ duration: 0.5 }}
           className="relative bg-card border border-border/60 rounded-2xl overflow-hidden shadow-xl"
         >
+          {/* Subtle parchment texture */}
           <div
             className="absolute inset-0 opacity-5 pointer-events-none"
             style={{
@@ -31,6 +35,7 @@ export function RemedyPanel() {
           />
 
           <div className="relative z-10 p-5">
+            {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Leaf className="w-4 h-4 text-amber-500/70" />
@@ -44,20 +49,23 @@ export function RemedyPanel() {
                   transition={{ repeat: Infinity, duration: 1.5 }}
                   className="text-xs font-sans text-amber-600/60 italic"
                 >
-                  Stirring…
+                  Barty's stirrin'…
                 </motion.div>
               )}
             </div>
 
+            {/* Name & Emoji */}
             <div className="flex items-start gap-3 mb-4">
               <div className="text-3xl leading-none mt-0.5 flex-shrink-0">{remedy.emoji}</div>
               <h3 className="font-display text-lg text-amber-100 leading-tight">{remedy.name}</h3>
             </div>
 
+            {/* Description — the heart of it */}
             <p className="font-serif text-sm text-muted-foreground leading-relaxed mb-5 italic border-l-2 border-amber-700/30 pl-3">
               "{remedy.description}"
             </p>
 
+            {/* What You Need */}
             <div className="mb-4">
               <h4 className="font-display text-xs tracking-widest text-amber-600/70 uppercase mb-2">
                 What You Need
@@ -72,6 +80,7 @@ export function RemedyPanel() {
               </ul>
             </div>
 
+            {/* The Path Forward */}
             <div className="pt-4 border-t border-border/40">
               <h4 className="font-display text-xs tracking-widest text-amber-600/70 uppercase mb-2">
                 The Path Forward

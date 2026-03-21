@@ -3,7 +3,6 @@ import { Send } from 'lucide-react';
 import { useBartyChat } from '@/hooks/use-barty-chat';
 import { useListGeminiMessages } from '@workspace/api-client-react';
 import { MessageBubble } from './MessageBubble';
-import { useAppStore } from '@/store/use-app-store';
 
 export function ChatInterface({ conversationId }: { conversationId: number }) {
   const [input, setInput] = useState('');
@@ -18,9 +17,8 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
     isStreaming, 
     streamedText, 
     optimisticUserMessage,
+    isUpdatingRemedy,
   } = useBartyChat(conversationId);
-
-  const isUpdatingRemedy = useAppStore(state => state.isUpdatingRemedy);
 
   useEffect(() => {
     if (scrollRef.current) {

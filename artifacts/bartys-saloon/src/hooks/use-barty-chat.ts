@@ -15,6 +15,7 @@ export function useBartyChat(conversationId: number | null) {
   const setCurrentSessionId = useAppStore(state => state.setCurrentSessionId);
   const setCurrentRemedy = useAppStore(state => state.setCurrentRemedy);
   const setIsUpdatingRemedy = useAppStore(state => state.setIsUpdatingRemedy);
+  const isUpdatingRemedy = useAppStore(state => state.isUpdatingRemedy);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -162,5 +163,6 @@ export function useBartyChat(conversationId: number | null) {
     optimisticUserMessage,
     error,
     stopAudio,
+    isUpdatingRemedy,
   };
 }

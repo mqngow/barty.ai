@@ -6,6 +6,12 @@ import { useCreateGeminiConversation } from '@workspace/api-client-react';
 import { useAppStore } from '@/store/use-app-store';
 import { Beer } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useBartyChat } from '@/hooks/use-barty-chat';
+
+function RemedySidebar({ conversationId }: { conversationId: number }) {
+  const { isUpdatingRemedy } = useBartyChat(conversationId);
+  return <RemedyPanel isUpdating={isUpdatingRemedy} />;
+}
 
 export default function HomePage() {
   const { activeConversationId, setActiveConversation } = useAppStore();
@@ -53,13 +59,13 @@ export default function HomePage() {
           </motion.div>
         ) : (
           <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start py-4">
-            {/* Left: Barty portrait + live remedy */}
+            {/* Left Side: Barty portrait + live remedy */}
             <div className="lg:col-span-5 flex flex-col gap-6 sticky top-24">
               <BartyPortrait />
-              <RemedyPanel />
+              <RemedySidebar conversationId={activeConversationId} />
             </div>
             
-            {/* Right: Chat */}
+            {/* Right Side: Chat */}
             <div className="lg:col-span-7">
               <ChatInterface conversationId={activeConversationId} />
             </div>
