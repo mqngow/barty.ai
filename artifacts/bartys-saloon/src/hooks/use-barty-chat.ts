@@ -12,10 +12,12 @@ export function useBartyChat(conversationId: number | null) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { mutateAsync: generateSpeech } = useTextToSpeech();
   const audioEnabled = useAppStore(state => state.audioEnabled);
+  const setCurrentSessionId = useAppStore(state => state.setCurrentSessionId);
+  const setCurrentRemedy = useAppStore(state => state.setCurrentRemedy);
+  const setIsUpdatingRemedy = useAppStore(state => state.setIsUpdatingRemedy);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Cleanup audio on unmount
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -38,6 +40,46 @@ export function useBartyChat(conversationId: number | null) {
       }
     } catch (err) {
       console.error("Failed to play Barty's voice:", err);
+    }
+  };
+
+  const updateRemedy = async (convId: number) => {
+    setIsUpdatingRemedy(true);
+    try {
+      const sessionRes = await fetch('/api/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId: convId }),
+      });
+      if (!sessionRes.ok) return;
+      const session = await sessionRes.json();
+      setCurrentSessionId(session.id);
+
+      const drinkRes = await fetch(`/api/sessions/${session.id}/generate-drink`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!drinkRes.ok) return;
+      const remedy = await drinkRes.json();
+
+      // Ingredients come back as an array from fresh generation
+      const ingredients = Array.isArray(remedy.ingredients)
+        ? remedy.ingredients
+        : typeof remedy.ingredients === 'string'
+          ? remedy.ingredients.split(',').map((i: string) => i.trim())
+          : [];
+
+      setCurrentRemedy({
+        name: remedy.name,
+        description: remedy.description,
+        ingredients,
+        instructions: remedy.instructions,
+        emoji: remedy.emoji,
+      });
+    } catch (err) {
+      console.error("Failed to update remedy:", err);
+    } finally {
+      setIsUpdatingRemedy(false);
     }
   };
 
@@ -76,9 +118,7 @@ export function useBartyChat(conversationId: number | null) {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
-                if (data.done) {
-                  // Stream finished
-                } else if (data.content) {
+                if (data.content) {
                   fullResponse += data.content;
                   setStreamedText(fullResponse);
                 }
@@ -90,14 +130,14 @@ export function useBartyChat(conversationId: number | null) {
         }
       }
 
-      // Refresh messages query to get persisted data
       await queryClient.invalidateQueries({
         queryKey: getListGeminiMessagesQueryKey(conversationId)
       });
       
-      // Play audio response
       if (fullResponse) {
+        // Play audio and update remedy concurrently (fire-and-forget remedy)
         playBartyVoice(fullResponse);
+        updateRemedy(conversationId);
       }
 
     } catch (err) {
@@ -121,6 +161,6 @@ export function useBartyChat(conversationId: number | null) {
     streamedText,
     optimisticUserMessage,
     error,
-    stopAudio
+    stopAudio,
   };
 }

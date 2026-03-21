@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'wouter';
-import { Beer, BookOpen, Volume2, VolumeX } from 'lucide-react';
+import { Beer, Leaf, Volume2, VolumeX } from 'lucide-react';
 import { useAppStore } from '@/store/use-app-store';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +43,7 @@ export function Navbar() {
           {/* Nav Links */}
           <div className="flex items-center gap-2 sm:gap-4">
             <NavLink href="/" icon={Beer} label="Belly Up" />
-            <NavLink href="/menu" icon={BookOpen} label="Drink Menu" />
+            <NavLink href="/menu" icon={Leaf} label="Remedy Log" />
             
             <div className="w-px h-8 bg-border/50 mx-2"></div>
             

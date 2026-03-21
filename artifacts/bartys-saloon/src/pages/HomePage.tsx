@@ -1,6 +1,7 @@
 import { AppLayout } from '@/components/layout/AppLayout';
 import { BartyPortrait } from '@/components/chat/BartyPortrait';
 import { ChatInterface } from '@/components/chat/ChatInterface';
+import { RemedyPanel } from '@/components/chat/RemedyPanel';
 import { useCreateGeminiConversation } from '@workspace/api-client-react';
 import { useAppStore } from '@/store/use-app-store';
 import { Beer } from 'lucide-react';
@@ -51,14 +52,15 @@ export default function HomePage() {
             </button>
           </motion.div>
         ) : (
-          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left Side: Barty */}
-            <div className="lg:col-span-5 flex justify-center sticky top-24">
+          <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start py-4">
+            {/* Left: Barty portrait + live remedy */}
+            <div className="lg:col-span-5 flex flex-col gap-6 sticky top-24">
               <BartyPortrait />
+              <RemedyPanel />
             </div>
             
-            {/* Right Side: Chat */}
-            <div className="lg:col-span-7 h-full">
+            {/* Right: Chat */}
+            <div className="lg:col-span-7">
               <ChatInterface conversationId={activeConversationId} />
             </div>
           </div>

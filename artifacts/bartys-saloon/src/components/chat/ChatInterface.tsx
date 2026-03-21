@@ -1,29 +1,27 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, GlassWater } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useBartyChat } from '@/hooks/use-barty-chat';
 import { useListGeminiMessages } from '@workspace/api-client-react';
 import { MessageBubble } from './MessageBubble';
-import { useLocation } from 'wouter';
+import { useAppStore } from '@/store/use-app-store';
 
 export function ChatInterface({ conversationId }: { conversationId: number }) {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [, setLocation] = useLocation();
 
   const { data: messages = [] } = useListGeminiMessages(conversationId, {
-    query: { refetchInterval: 5000 } // Poll occasionally just in case
+    query: { refetchInterval: 5000 }
   });
   
-  const [isGenerating, setIsGenerating] = useState(false);
-
   const { 
     sendMessage, 
     isStreaming, 
     streamedText, 
-    optimisticUserMessage 
+    optimisticUserMessage,
   } = useBartyChat(conversationId);
 
-  // Auto-scroll to bottom
+  const isUpdatingRemedy = useAppStore(state => state.isUpdatingRemedy);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -37,47 +35,17 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
     setInput('');
   };
 
-  const handleLastCall = async () => {
-    if (!conversationId || isGenerating || isStreaming) return;
-    setIsGenerating(true);
-    try {
-      const sessionRes = await fetch('/api/sessions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId }),
-      });
-      if (!sessionRes.ok) throw new Error('Failed to create session');
-      const session = await sessionRes.json();
-
-      const drinkRes = await fetch(`/api/sessions/${session.id}/generate-drink`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!drinkRes.ok) throw new Error('Failed to generate drink');
-
-      setLocation('/menu');
-    } catch (err) {
-      console.error("Failed to generate drink:", err);
-      alert("Barty couldn't figure out the recipe right now. Try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-full h-[600px] lg:h-[700px] bg-background/50 border border-border/50 rounded-2xl overflow-hidden shadow-2xl relative">
+    <div className="flex flex-col h-[600px] lg:h-[700px] bg-background/50 border border-border/50 rounded-2xl overflow-hidden shadow-2xl relative">
       
-      {/* Top Bar for Chat */}
+      {/* Top Bar */}
       <div className="h-16 border-b border-border/50 bg-card/80 backdrop-blur-sm flex items-center justify-between px-6 z-10">
-        <h3 className="font-display text-lg text-amber-100/80">Conversation Tab</h3>
-        <button
-          onClick={handleLastCall}
-          disabled={isGenerating || isStreaming || messages.length === 0}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 hover:shadow-[0_0_15px_rgba(217,119,6,0.3)] disabled:opacity-50 disabled:cursor-not-allowed transition-all font-display tracking-wider text-sm"
-        >
-          <GlassWater className="w-4 h-4" />
-          {isGenerating ? "Mixing..." : "Last Call (Get Drink)"}
-        </button>
+        <h3 className="font-display text-lg text-amber-100/80">Conversation</h3>
+        {isUpdatingRemedy && (
+          <span className="text-xs font-serif text-amber-600/60 italic animate-pulse">
+            Barty's stirring your remedy…
+          </span>
+        )}
       </div>
 
       {/* Messages Area */}
@@ -134,7 +102,7 @@ export function ChatInterface({ conversationId }: { conversationId: number }) {
           </button>
         </form>
         <p className="text-xs text-muted-foreground text-center mt-2 font-sans opacity-60">
-          Press Enter to send, Shift+Enter for new line
+          Press Enter to send · Shift+Enter for new line
         </p>
       </div>
     </div>

@@ -116,25 +116,26 @@ router.post("/sessions/:id/generate-drink", async (req, res) => {
     .map((m) => `${m.role === "assistant" ? "Barty" : "Patron"}: ${m.content}`)
     .join("\n\n");
 
-  const prompt = `You are Barty, a Wild West saloon bartender and therapist. Based on this conversation with a patron, create a unique custom cocktail/mocktail that reflects their mood, problems, and the emotional journey of the conversation.
+  const prompt = `You are Barty, a Wild West saloon bartender and therapist. Based on this conversation with a patron, craft a unique non-alcoholic herbal remedy/tonic that serves as both a summary of what the patron is going through AND a prescription for moving forward.
 
-The drink should:
-- Have a creative Wild West / cowboy themed name that metaphorically relates to their situation
-- Have a short poetic description (2-3 sentences) that ties to their emotional experience
-- Include 4-7 ingredients (can be real or whimsically/poetically named)
-- Have brief, flavorful instructions (1-2 sentences in Barty's voice)
-- Have a fitting emoji
+The remedy should:
+- Have a poetic Wild West / apothecary-style name that metaphorically captures the core of their situation
+- Have a description (2-3 sentences) that first reflects back the patron's central struggle or feeling, then proposes a compassionate path forward or insight
+- Include 4-7 symbolic "ingredients" — these are NOT literal drink ingredients but poetic metaphors representing emotions, strengths, or things the patron needs (e.g., "A spoonful of self-compassion", "Three deep breaths of open air", "The patience of an old trail horse")
+- Have instructions (1-2 sentences in Barty's voice) that describe the *action* or *practice* the patron should take — a real, grounded suggestion for healing or growth
+- Have a fitting emoji (prefer herbs, nature, tea, stars, hearts — NO alcohol glasses)
+- Contain ZERO alcohol references in any field
 
 Conversation:
 ${conversationSummary}
 
 Respond ONLY with a JSON object in this exact format (no markdown, no explanation, no surrounding text):
 {
-  "name": "The Dusty Trail Heartbreak",
-  "description": "A bittersweet blend for those who've ridden hard and far...",
-  "ingredients": ["2 oz Smoky Whiskey", "1 oz Honey Syrup", "Fresh Sage Tears", "A Pinch of Resilience"],
-  "instructions": "Combine over ice, stir gently like a slow sunset, and sip while watchin' the horizon.",
-  "emoji": "🥃"
+  "name": "The Still Water Tonic",
+  "description": "This patron has been carrying a heavy load — the kind that builds up quiet-like, till one day it's hard to breathe. The path forward lies not in doing more, but in learning to set it down, piece by piece, and trust that rest is not defeat.",
+  "ingredients": ["A long exhale of unspoken worry", "Two cups of honest self-talk", "The warmth of one trusted friend", "A handful of small, kept promises", "Patience steeped overnight"],
+  "instructions": "Take one quiet moment each mornin' before the world gets loud. Write down one true thing — not a task, but a feelin'. Let it sit. Then go easy on yourself for the rest of the day.",
+  "emoji": "🌿"
 }`;
 
   const response = await ai.models.generateContent({
