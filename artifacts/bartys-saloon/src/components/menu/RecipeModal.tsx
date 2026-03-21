@@ -12,9 +12,16 @@ interface RecipeModalProps {
 export function RecipeModal({ session, isOpen, onClose }: RecipeModalProps) {
   if (!session) return null;
 
-  const ingredients = session.drinkIngredients
-    ? session.drinkIngredients.split(',').map(i => i.trim())
-    : ["A measure of unspoken thoughts"];
+  let ingredients: string[];
+  try {
+    ingredients = JSON.parse(session.drinkIngredients ?? '[]');
+  } catch {
+    ingredients = (session.drinkIngredients ?? '')
+      .split(',')
+      .map(i => i.trim())
+      .filter(Boolean);
+  }
+  if (!ingredients.length) ingredients = ["A measure of unspoken thoughts"];
 
   return (
     <AnimatePresence>
