@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTextToSpeech, getListGeminiMessagesQueryKey } from '@workspace/api-client-react';
+import { getListGeminiMessagesQueryKey } from '@workspace/api-client-react';
 import { useAppStore } from '@/store/use-app-store';
 
 function stripMarkdown(text: string): string {
@@ -13,15 +13,55 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
+let cachedKey: { apiKey: string; voiceId: string } | null = null;
+
+async function fetchElevenLabsKey(): Promise<{ apiKey: string; voiceId: string } | null> {
+  if (cachedKey) return cachedKey;
+  try {
+    const res = await fetch('/api/elevenlabs/key');
+    if (!res.ok) return null;
+    cachedKey = await res.json();
+    return cachedKey;
+  } catch {
+    return null;
+  }
+}
+
+async function callElevenLabsDirect(text: string, apiKey: string, voiceId: string): Promise<ArrayBuffer | null> {
+  try {
+    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        model_id: 'eleven_turbo_v2_5',
+        voice_settings: {
+          stability: 0.65,
+          similarity_boost: 0.8,
+          style: 0.3,
+          use_speaker_boost: true,
+          speed: 1.15,
+        },
+      }),
+    });
+    if (!res.ok) return null;
+    return await res.arrayBuffer();
+  } catch {
+    return null;
+  }
+}
+
 export function useBartyChat(conversationId: number | null) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedText, setStreamedText] = useState('');
   const [optimisticUserMessage, setOptimisticUserMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const { mutateAsync: generateSpeech } = useTextToSpeech();
   const audioEnabled = useAppStore(state => state.audioEnabled);
   const setCurrentSessionId = useAppStore(state => state.setCurrentSessionId);
   const setCurrentRemedy = useAppStore(state => state.setCurrentRemedy);
@@ -41,10 +81,7 @@ export function useBartyChat(conversationId: number | null) {
 
   const playWithWebSpeech = (text: string) => {
     const synth = window.speechSynthesis;
-    if (!synth) {
-      setIsSpeaking(false);
-      return;
-    }
+    if (!synth) { setIsSpeaking(false); return; }
     synth.cancel();
 
     const utterance = new SpeechSynthesisUtterance(stripMarkdown(text));
@@ -58,43 +95,44 @@ export function useBartyChat(conversationId: number | null) {
         /david|daniel|thomas|mark|fred|ralph|bruce|junior/i.test(v.name)
       ) || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('female'));
       if (preferred) utterance.voice = preferred;
-
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => setIsSpeaking(false);
       synth.speak(utterance);
     };
 
-    if (synth.getVoices().length > 0) {
-      trySpeak();
-    } else {
-      synth.addEventListener('voiceschanged', trySpeak, { once: true });
-    }
+    if (synth.getVoices().length > 0) trySpeak();
+    else synth.addEventListener('voiceschanged', trySpeak, { once: true });
   };
 
   const playBartyVoice = async (text: string) => {
-    try {
-      const response = await generateSpeech({ data: { text } });
-      if (response.audioBase64) {
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        const audio = new Audio(`data:${response.mimeType};base64,${response.audioBase64}`);
-        audioRef.current = audio;
-        audio.addEventListener('playing', () => setIsSpeaking(true));
-        audio.addEventListener('ended', () => setIsSpeaking(false));
-        audio.addEventListener('pause', () => setIsSpeaking(false));
-        audio.addEventListener('error', () => {
-          setIsSpeaking(false);
-          playWithWebSpeech(text);
-        });
-        await audio.play();
-      } else {
-        playWithWebSpeech(text);
-      }
-    } catch {
-      playWithWebSpeech(text);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
+
+    const keyData = await fetchElevenLabsKey();
+    if (keyData) {
+      const buffer = await callElevenLabsDirect(text, keyData.apiKey, keyData.voiceId);
+      if (buffer) {
+        try {
+          const blob = new Blob([buffer], { type: 'audio/mpeg' });
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          audioRef.current = audio;
+          audio.addEventListener('playing', () => setIsSpeaking(true));
+          audio.addEventListener('ended', () => { setIsSpeaking(false); URL.revokeObjectURL(url); });
+          audio.addEventListener('pause', () => setIsSpeaking(false));
+          audio.addEventListener('error', () => { setIsSpeaking(false); playWithWebSpeech(text); });
+          await audio.play();
+          return;
+        } catch {
+          // fall through to Web Speech
+        }
+      }
+    }
+
+    playWithWebSpeech(text);
   };
 
   const updateRemedy = async (convId: number) => {
@@ -130,7 +168,7 @@ export function useBartyChat(conversationId: number | null) {
         emoji: remedy.emoji,
       });
     } catch (err) {
-      console.error("Failed to update remedy:", err);
+      console.error('Failed to update remedy:', err);
     } finally {
       setIsUpdatingRemedy(false);
     }
@@ -138,7 +176,7 @@ export function useBartyChat(conversationId: number | null) {
 
   const sendMessage = async (text: string) => {
     if (!conversationId) return;
-    
+
     setIsStreaming(true);
     setIsSpeaking(true);
     setStreamedText('');
@@ -152,9 +190,7 @@ export function useBartyChat(conversationId: number | null) {
         body: JSON.stringify({ content: text }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send message to Barty');
-      }
+      if (!response.ok) throw new Error('Failed to send message to Barty');
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -164,11 +200,8 @@ export function useBartyChat(conversationId: number | null) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          
           const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
-          
-          for (const line of lines) {
+          for (const line of chunk.split('\n')) {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
@@ -177,7 +210,7 @@ export function useBartyChat(conversationId: number | null) {
                   setStreamedText(fullResponse);
                 }
               } catch {
-                // Ignore parse errors for incomplete chunks
+                // incomplete chunk, ignore
               }
             }
           }
@@ -185,9 +218,9 @@ export function useBartyChat(conversationId: number | null) {
       }
 
       await queryClient.invalidateQueries({
-        queryKey: getListGeminiMessagesQueryKey(conversationId)
+        queryKey: getListGeminiMessagesQueryKey(conversationId),
       });
-      
+
       if (fullResponse) {
         updateRemedy(conversationId);
         if (audioEnabled) {
@@ -198,7 +231,6 @@ export function useBartyChat(conversationId: number | null) {
       } else {
         setIsSpeaking(false);
       }
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong at the bar');
       setIsSpeaking(false);
@@ -210,9 +242,7 @@ export function useBartyChat(conversationId: number | null) {
   };
 
   const stopAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
+    if (audioRef.current) audioRef.current.pause();
     window.speechSynthesis?.cancel();
     setIsSpeaking(false);
   };

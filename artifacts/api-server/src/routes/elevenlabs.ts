@@ -12,6 +12,14 @@ logger.info(
   "ElevenLabs route loaded"
 );
 
+router.get("/elevenlabs/key", (_req, res) => {
+  if (!apiKey) {
+    res.status(503).json({ error: "ElevenLabs not configured" });
+    return;
+  }
+  res.json({ apiKey, voiceId: DEFAULT_VOICE_ID });
+});
+
 router.post("/elevenlabs/tts", async (req, res) => {
   const body = TextToSpeechBody.parse(req.body);
   const voiceId = body.voiceId || DEFAULT_VOICE_ID;
