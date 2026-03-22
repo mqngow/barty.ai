@@ -1,15 +1,21 @@
 import { Router, type IRouter } from "express";
 import { TextToSpeechBody } from "@workspace/api-zod";
+import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
 
 const DEFAULT_VOICE_ID = "pqHfZKP75CvOlQylNhV4";
 
+const apiKey = process.env.ELEVENLABS_API_KEY;
+logger.info(
+  { keyPresent: !!apiKey, keyLength: apiKey?.length ?? 0 },
+  "ElevenLabs route loaded"
+);
+
 router.post("/elevenlabs/tts", async (req, res) => {
   const body = TextToSpeechBody.parse(req.body);
   const voiceId = body.voiceId || DEFAULT_VOICE_ID;
 
-  const apiKey = process.env.ELEVENLABS_API_KEY;
   if (!apiKey) {
     res.status(503).json({ error: "ElevenLabs not configured. Please add your ELEVENLABS_API_KEY." });
     return;
@@ -39,6 +45,10 @@ router.post("/elevenlabs/tts", async (req, res) => {
 
   if (!response.ok) {
     const err = await response.text();
+    logger.error(
+      { status: response.status, voiceId, keyLength: apiKey.length, body: err },
+      "ElevenLabs API error"
+    );
     res.status(response.status).json({ error: `ElevenLabs error: ${err}` });
     return;
   }
