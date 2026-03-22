@@ -1,0 +1,49 @@
+#20 9.464 + prettier 3.8.1
+#20 9.464 + typescript 5.9.3
+#20 9.464 
+#20 9.474 . preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+#20 9.524 . preinstall: Done
+#20 9.632 ╭ Warning ─────────────────────────────────────────────────────────────────────╮
+#20 9.632 │                                                                              │
+#20 9.632 │   Ignored build scripts: protobufjs@7.5.4.                                   │
+#20 9.632 │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+#20 9.632 │   to run scripts.                                                            │
+#20 9.632 │                                                                              │
+#20 9.632 ╰──────────────────────────────────────────────────────────────────────────────╯
+#20 9.689 Done in 9.5s using pnpm v10.32.1
+#20 DONE 10.9s
+#21 [builder 1/5] COPY . .
+#21 DONE 0.8s
+#22 [builder 2/5] RUN pnpm run typecheck:libs
+#22 0.379 
+#22 0.379 > workspace@0.0.0 typecheck:libs /app
+#22 0.379 > tsc --build
+#22 0.379 
+#22 2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'CreateGeminiConversationBody'. Consider explicitly re-exporting to resolve the ambiguity.
+#22 2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'SendGeminiMessageBody'. Consider explicitly re-exporting to resolve the ambiguity.
+#22 2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'TextToSpeechBody'. Consider explicitly re-exporting to resolve the ambiguity.
+#22 2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'TextToSpeechResponse'. Consider explicitly re-exporting to resolve the ambiguity.
+#22 2.871  ELIFECYCLE  Command failed with exit code 2.
+#22 ERROR: process "/bin/sh -c pnpm run typecheck:libs" did not complete successfully: exit code: 2
+------
+ > [builder 2/5] RUN pnpm run typecheck:libs:
+0.379 
+0.379 > workspace@0.0.0 typecheck:libs /app
+0.379 > tsc --build
+0.379 
+2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'CreateGeminiConversationBody'. Consider explicitly re-exporting to resolve the ambiguity.
+2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'SendGeminiMessageBody'. Consider explicitly re-exporting to resolve the ambiguity.
+2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'TextToSpeechBody'. Consider explicitly re-exporting to resolve the ambiguity.
+2.666 lib/api-zod/src/index.ts(2,1): error TS2308: Module "./generated/api" has already exported a member named 'TextToSpeechResponse'. Consider explicitly re-exporting to resolve the ambiguity.
+2.871  ELIFECYCLE  Command failed with exit code 2.
+------
+Dockerfile:30
+--------------------
+  28 |     ENV BASE_PATH=/
+  29 |     
+  30 | >>> RUN pnpm run typecheck:libs
+Menu
+  31 |     
+  32 |     RUN pnpm --filter @workspace/api-spec run codegen
+--------------------
+error: failed to solve: process "/bin/sh -c pnpm run typecheck:libs" did not complete successfully: exit code: 2
