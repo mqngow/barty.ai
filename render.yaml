@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: bartys-saloon
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bartys-saloon-db
+          property: connectionString
+      # Get a free Gemini API key at https://aistudio.google.com/apikey
+      # Set AI_INTEGRATIONS_GEMINI_BASE_URL to: https://generativelanguage.googleapis.com
+      - key: AI_INTEGRATIONS_GEMINI_BASE_URL
+        sync: false
+      - key: AI_INTEGRATIONS_GEMINI_API_KEY
+        sync: false
+      # Optional — ElevenLabs TTS for Barty's voice
+      - key: ELEVENLABS_API_KEY
+        sync: false
+
+databases:
+  - name: bartys-saloon-db
+    plan: free
