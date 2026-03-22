@@ -128,6 +128,13 @@ export const GetSessionResponse = zod.object({
 });
 
 /**
+ * @summary Delete a remedy log session
+ */
+export const DeleteSessionParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
  * @summary Generate a drink recipe for a session based on the conversation
  */
 export const GenerateDrinkParams = zod.object({

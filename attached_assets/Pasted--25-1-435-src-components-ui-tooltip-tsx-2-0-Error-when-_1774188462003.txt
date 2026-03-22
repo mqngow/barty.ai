@@ -1,0 +1,51 @@
+#25 1.435 src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+#25 3.445 ✓ 2487 modules transformed.
+#25 3.447 ✗ Build failed in 2.44s
+#25 3.448 error during build:
+#25 3.448 src/pages/DrinkMenuPage.tsx (5:26): "useDeleteSession" is not exported by "../../lib/api-client-react/src/index.ts", imported by "src/pages/DrinkMenuPage.tsx".
+#25 3.448 file: /app/artifacts/bartys-saloon/src/pages/DrinkMenuPage.tsx:5:26
+#25 3.448 
+#25 3.448 3: import { DrinkCard } from '@/components/menu/DrinkCard';
+#25 3.448 4: import { RecipeModal } from '@/components/menu/RecipeModal';
+#25 3.448 5: import { useListSessions, useDeleteSession, getListSessionsQueryKey } from '@workspace/api-client-react';
+#25 3.448                              ^
+#25 3.448 6: import { useQueryClient } from '@tanstack/react-query';
+#25 3.448 7: import type { Session } from '@workspace/api-client-react';
+#25 3.448 
+#25 3.448     at getRollupError (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/parseAst.js:402:41)
+#25 3.448     at error (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/parseAst.js:398:42)
+#25 3.448     at Module.error (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:17040:16)
+#25 3.448     at Module.traceVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:17452:29)
+#25 3.448     at ModuleScope.findVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:15070:39)
+#25 3.448     at FunctionScope.findVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+#25 3.448     at FunctionBodyScope.findVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+#25 3.448     at Identifier.bind (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:5447:40)
+#25 3.448     at CallExpression.bind (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:2829:23)
+#25 3.448     at CallExpression.bind (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:12179:15)
+#25 3.628 /app/artifacts/bartys-saloon:
+#25 3.628  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/bartys-saloon@0.0.0 build: `vite build --config vite.config.ts`
+#25 3.628 Exit status 1
+#25 ERROR: process "/bin/sh -c pnpm --filter @workspace/bartys-saloon run build" did not complete successfully: exit code: 1
+------
+ > [builder 5/5] RUN pnpm --filter @workspace/bartys-saloon run build:
+3.448     at Module.traceVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:17452:29)
+3.448     at ModuleScope.findVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:15070:39)
+3.448     at FunctionScope.findVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+3.448     at FunctionBodyScope.findVariable (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+3.448     at Identifier.bind (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:5447:40)
+3.448     at CallExpression.bind (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:2829:23)
+3.448     at CallExpression.bind (file:///app/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:12179:15)
+3.628 /app/artifacts/bartys-saloon:
+3.628  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @workspace/bartys-saloon@0.0.0 build: `vite build --config vite.config.ts`
+3.628 Exit status 1
+------
+Dockerfile:36
+--------------------
+  34 |     RUN pnpm --filter @workspace/api-server run build
+Menu
+  35 |     
+  36 | >>> RUN pnpm --filter @workspace/bartys-saloon run build
+  37 |     
+  38 |     FROM base AS production
+--------------------
+error: failed to solve: process "/bin/sh -c pnpm --filter @workspace/bartys-saloon run build" did not complete successfully: exit code: 1
