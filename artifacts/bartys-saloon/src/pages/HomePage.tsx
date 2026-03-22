@@ -79,7 +79,7 @@ export default function HomePage() {
               disabled={isPending}
               className="mt-8 px-8 py-4 bg-gradient-to-b from-primary to-amber-700 hover:from-amber-400 hover:to-primary text-black font-display tracking-widest text-xl rounded-xl shadow-[0_0_20px_rgba(217,119,6,0.4)] hover:shadow-[0_0_30px_rgba(217,119,6,0.6)] hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:transform-none"
             >
-              {isPending ? "Wiping the bar..." : "POUR ONE OUT"}
+              {isPending ? "Wiping the bar..." : "OPEN A TAB"}
             </button>
           </motion.div>
         ) : (

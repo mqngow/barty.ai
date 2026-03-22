@@ -131,8 +131,10 @@ router.post("/sessions/:id/generate-drink", async (req, res) => {
 
   const prompt = `You are Barty, a Wild West saloon bartender and therapist. Based on this conversation with a patron, craft a unique non-alcoholic herbal remedy/tonic that serves as both a summary of what the patron is going through AND a prescription for moving forward.
 
+IMPORTANT — Drink Name Consistency: First, read through Barty's messages in the conversation. If Barty already named or described a specific drink or tonic for this patron (e.g., "I'm thinkin' a Dusty Trail Tonic is what you need" or "reckon this calls for a Prairie Calm Elixir"), you MUST use that exact name (or the closest clear name Barty gave). The remedy card must match what Barty already told the patron. If Barty has not named a specific drink yet, invent one now.
+
 The remedy should:
-- Have a poetic Wild West / apothecary-style name that metaphorically captures the core of their situation
+- Have a poetic Wild West / apothecary-style name that metaphorically captures the core of their situation (matching Barty's named drink if one was given)
 - Have a description (2-3 sentences) that first reflects back the patron's central struggle or feeling, then proposes a compassionate path forward or insight
 - Include 4-7 symbolic "ingredients" — these are NOT literal drink ingredients but poetic metaphors representing emotions, strengths, or things the patron needs (e.g., "A spoonful of self-compassion", "Three deep breaths of open air", "The patience of an old trail horse")
 - Have instructions (1-2 sentences in Barty's voice) that describe the *action* or *practice* the patron should take — a real, grounded suggestion for healing or growth
