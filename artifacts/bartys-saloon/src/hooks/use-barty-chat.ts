@@ -3,6 +3,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTextToSpeech, getListGeminiMessagesQueryKey } from '@workspace/api-client-react';
 import { useAppStore } from '@/store/use-app-store';
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/\*(.*?)\*/g, '$1')
+    .replace(/_(.*?)_/g, '$1')
+    .replace(/`(.*?)`/g, '$1')
+    .replace(/#{1,6}\s/g, '')
+    .trim();
+}
+
 export function useBartyChat(conversationId: number | null) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamedText, setStreamedText] = useState('');
@@ -25,8 +35,42 @@ export function useBartyChat(conversationId: number | null) {
         audioRef.current.pause();
         audioRef.current = null;
       }
+      window.speechSynthesis?.cancel();
     };
   }, []);
+
+  const playWithWebSpeech = (text: string) => {
+    const synth = window.speechSynthesis;
+    if (!synth) {
+      setIsSpeaking(false);
+      return;
+    }
+    synth.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(stripMarkdown(text));
+    utterance.rate = 0.82;
+    utterance.pitch = 0.65;
+    utterance.volume = 1;
+
+    const trySpeak = () => {
+      const voices = synth.getVoices();
+      const preferred = voices.find(v =>
+        /david|daniel|thomas|mark|fred|ralph|bruce|junior/i.test(v.name)
+      ) || voices.find(v => v.lang.startsWith('en') && !v.name.toLowerCase().includes('female'));
+      if (preferred) utterance.voice = preferred;
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      synth.speak(utterance);
+    };
+
+    if (synth.getVoices().length > 0) {
+      trySpeak();
+    } else {
+      synth.addEventListener('voiceschanged', trySpeak, { once: true });
+    }
+  };
 
   const playBartyVoice = async (text: string) => {
     try {
@@ -40,14 +84,16 @@ export function useBartyChat(conversationId: number | null) {
         audio.addEventListener('playing', () => setIsSpeaking(true));
         audio.addEventListener('ended', () => setIsSpeaking(false));
         audio.addEventListener('pause', () => setIsSpeaking(false));
-        audio.addEventListener('error', () => setIsSpeaking(false));
+        audio.addEventListener('error', () => {
+          setIsSpeaking(false);
+          playWithWebSpeech(text);
+        });
         await audio.play();
       } else {
-        setIsSpeaking(false);
+        playWithWebSpeech(text);
       }
-    } catch (err) {
-      console.error("Failed to play Barty's voice:", err);
-      setIsSpeaking(false);
+    } catch {
+      playWithWebSpeech(text);
     }
   };
 
@@ -70,7 +116,6 @@ export function useBartyChat(conversationId: number | null) {
       if (!drinkRes.ok) return;
       const remedy = await drinkRes.json();
 
-      // Ingredients come back as an array from fresh generation
       const ingredients = Array.isArray(remedy.ingredients)
         ? remedy.ingredients
         : typeof remedy.ingredients === 'string'
@@ -131,7 +176,7 @@ export function useBartyChat(conversationId: number | null) {
                   fullResponse += data.content;
                   setStreamedText(fullResponse);
                 }
-              } catch (e) {
+              } catch {
                 // Ignore parse errors for incomplete chunks
               }
             }
@@ -168,6 +213,7 @@ export function useBartyChat(conversationId: number | null) {
     if (audioRef.current) {
       audioRef.current.pause();
     }
+    window.speechSynthesis?.cancel();
     setIsSpeaking(false);
   };
 
